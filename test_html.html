@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>英和辞書（Web版）</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, button { margin: 5px; padding: 8px; }
+        .result { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>🍎 英和辞書ツール</h2>
+    <input id="word" type="text" placeholder="英単語" />
+    <input id="meaning" type="text" placeholder="日本語" />
+    <button onclick="saveWord()">保存</button>
+    <button onclick="searchWord()">検索</button>
+    <button onclick="deleteWord()">削除</button>
+
+    <div class="result" id="output"></div>
+
+    <script>
+        function requestToPHP(action, word, meaning = "") {
+            fetch("api.php", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action, word, meaning })
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById("output").textContent = data.message;
+            });
+        }
+
+        function saveWord() {
+            const word = document.getElementById("word").value;
+            const meaning = document.getElementById("meaning").value;
+            requestToPHP("save", word, meaning);
+        }
+
+        function searchWord() {
+            const word = document.getElementById("word").value;
+            requestToPHP("search", word);
+        }
+
+        function deleteWord() {
+            const word = document.getElementById("word").value;
+            requestToPHP("delete", word);
+        }
+    </script>
+</body>
+</html>
