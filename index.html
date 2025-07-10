@@ -7,46 +7,94 @@
         body { font-family: Arial, sans-serif; margin: 20px; }
         input, button { margin: 5px; padding: 8px; }
         .result { margin-top: 20px; }
+        button:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.05);
+        }
+        .result.success { color: green; }
+        .result.error { color: red; }
+
     </style>
 </head>
 <body>
     <h2>🍎 英和辞書ツール</h2>
-    <input id="word" type="text" placeholder="英単語" />
-    <input id="meaning" type="text" placeholder="日本語" />
-    <button onclick="saveWord()">保存</button>
+    <input type="text" id="searchBox" placeholder="例: apple">
     <button onclick="searchWord()">検索</button>
     <button onclick="deleteWord()">削除</button>
+    <input type="text" id="meaning" placeholder="日本語" />
+    <button onclick="saveWord()">保存</button>
 
     <div class="result" id="output"></div>
 
     <script>
-        function requestToPHP(action, word, meaning = "") {
-            fetch("api.php", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action, word, meaning })
-            })
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById("output").textContent = data.message;
-            });
+
+        async function requestToPHP(action, word, meaning = "") {
+            const output = document.getElementById("output");
+            output.textContent = "🍄 データを処理中です。少々お待ちください...";
+            try {
+                const res = await fetch("api.php", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ action, word, meaning })
+                });
+                if (!res.ok) {
+                    throw new Error(`サーバーエラー: ${res.status}`);
+                }
+                const data = await res.json();
+                output.textContent = data.message; // 処理完了
+                return data;
+            } catch (error) {
+                output.textContent = `エラーが発生しました: ${error.message}`; // エラー時
+                console.error("エラー:", error);
+                throw error;
+            }
         }
 
-        function saveWord() {
-            const word = document.getElementById("word").value;
-            const meaning = document.getElementById("meaning").value;
-            requestToPHP("save", word, meaning);
-        }
+        async function searchWord() {
+            const searchBox = document.getElementById("searchBox"); // 検索ボックスの取得
+            const meaningBox = document.getElementById("meaning"); // 日本語入力ボックスの取得
+            const word = searchBox.value;
 
-        function searchWord() {
-            const word = document.getElementById("word").value;
-            requestToPHP("search", word);
+            try {
+                const response = await requestToPHP("search", word);
+                output.textContent = "🍄 データを処理中です。少々お待ちください...";
+
+                if (response.status === "success") {
+                    document.getElementById("output").textContent = response.message; // 結果を表示
+                    searchBox.focus(); // 検索ボックスに再フォーカス
+                } else {
+                    const errorDetail = response.error || "不明なエラーです。"; // デフォルトエラー
+                    document.getElementById("output").textContent = `${response.message} (${errorDetail})`;
+                    console.warn("詳細:", errorDetail);
+                    meaningBox.focus(); // 日本語入力欄にフォーカス
+                }
+            } catch (err) {
+                console.error("PHPリクエスト中にエラーが発生しました:", err);
+                alert("通信エラーが発生しました。もう一度お試しください。");
+                searchBox.focus(); // 検索ボックスに再フォーカス
+            }
         }
 
         function deleteWord() {
-            const word = document.getElementById("word").value;
-            requestToPHP("delete", word);
+            const searchBox = document.getElementById("searchBox"); // 定義を追加
+            const word = searchBox.value;
+            requestToPHP("delete", word, "");
+
+            searchBox.value = ''; // 検索の文字を削除
+            searchBox.focus(); // 検索にフォーカス
         }
+
+        function saveWord() {
+            const searchBox = document.getElementById("searchBox"); // 定義を追加
+            const word = searchBox.value;
+            const meaningBox = document.getElementById("meaning"); // 定義を追加
+            const meaning = meaningBox.value;
+            requestToPHP("save", word, meaning);
+
+            meaningBox.value = ''; // 日本語の文字を削除
+            searchBox.focus(); // 検索にフォーカス
+        }
+
     </script>
 </body>
 </html>
