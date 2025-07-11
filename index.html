@@ -29,7 +29,7 @@
     <input type="text" id="searchBox" placeholder="例: apple">
     <button onclick="searchWord()">検索</button>
     <button onclick="deleteWord()">削除</button>
-    <input type="text" id="meaning" lang="ja" placeholder="日本語">
+    <input type="text" id="meaningBox" lang="ja" placeholder="日本語">
     <button onclick="saveWord()">保存</button>
 
     <div class="result" id="output"></div>
@@ -51,25 +51,26 @@
                 const data = await res.json();
                 output.textContent = data.message; // 処理完了
                 return data;
-            } catch (error) {
-                output.textContent = `エラーが発生しました: ${error.message}`; // エラー時
-                console.error("エラー:", error);
+            } catch (err) {
+                output.textContent = `エラーが発生しました: ${err.message}`;  // エラー時
+                console.error("エラー:", err);
                 throw error;
             }
         }
 
         async function searchWord() {
             const searchBox = document.getElementById("searchBox"); // 検索ボックスの取得
+            const meaningBox = document.getElementById("meaningBox"); // 日本語ボックスの取得
             const word = searchBox.value.trim(); // トリムして空白を除去
-
             if (!word) { // wordが空の場合
                 const output = document.getElementById("output");
                 output.textContent = "必要な単語を入力して下さい。";
+                searchBox.focus(); // 検索ボックスに再フォーカス
                 return; // 処理を中断
             }
 
             try {
-                const response = await requestToPHP("search", word);
+                const response = await requestToPHP("search", word, "");
 
                 if (response.status === "success") {
                     document.getElementById("output").textContent = response.message; // 結果を表示
@@ -80,7 +81,7 @@
                     meaningBox.lang = 'ja'; // 言語を日本語に設定
                 }
             } catch (err) {
-                output.textContent = `エラーが発生しました: ${error.message}`; // エラー時
+                output.textContent = `エラーが発生しました: ${err.message}`;  // エラー時
                 console.error("PHPリクエスト中にエラーが発生しました:", err);
                 searchBox.focus(); // 検索ボックスに再フォーカス
             }
@@ -104,10 +105,16 @@
         function saveWord() {
             const searchBox = document.getElementById("searchBox"); // 検索ボックスの取得
             const word = searchBox.value.trim(); // トリムして空白を除去
-            const meaningBox = document.getElementById("meaning"); // 日本語ボックスの取得
-            meaningBox.addEventListener('focus', () => meaningBox.lang = 'ja');
-            meaningBox.addEventListener('blur', () => meaningBox.lang = 'en');
+            const meaningBox = document.getElementById("meaningBox"); // 日本語の取得
             const meaning = meaningBox.value.trim(); // トリムして空白を除去
+
+            // IMEの正確な設定
+            meaningBox.addEventListener('focus', () => {
+                meaningBox.lang = 'ja'; // フォーカス時に日本語
+            });
+            meaningBox.addEventListener('blur', () => {
+                meaningBox.lang = 'en'; // フォーカス外れたら英語
+            });
 
             if (!word || !meaning) { // word,meaningが空の場合
                 const output = document.getElementById("output");
