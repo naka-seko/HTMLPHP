@@ -1,6 +1,4 @@
-peach,もも
-grape,ぶどう
+grape,グレープ
 grapefruit,グレープフルーツ
-banana,バナナ
-mango,マンゴー
-apple,りんご
+peach,もも
+kiwi,キウィフルーツ
