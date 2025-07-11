@@ -5,27 +5,56 @@
     <title>英和辞書（Web版）</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        input, button { margin: 5px; padding: 8px; }
+        .dark-mode {
+            background-color: #333;
+            color: #fff;
+        }
+        input, button {
+            margin: 5px;
+            padding: 8px;
+            border-radius: 5px; /* 丸みを追加 */
+            border: 1px solid #ddd;
+            box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+        }
+        input:focus, button:focus {
+            outline: none; 
+            border-color: #f88; 
+            box-shadow: 0 0 10px #ffab91; /* フォーカス時の効果 */
+        }
         .result { margin-top: 20px; }
         button:hover {
-            background-color: #f0f0f0;
-            transform: scale(1.05);
+            background-color: #ffab91; /* 明るい背景色 */
+            color: #fff; /* ホバーテキスト色 */
+            transform: scale(1.1); /* 拡大効果 */
+            transition: 0.3s ease; /* スムーズなアニメーション */
         }
         .result.success {
-            color: green;
-            border: 1px solid green;
-            background-color: #e6ffe6;
+            color: #2e7d32; /* 濃い緑色 */
+            border: 2px solid #66bb6a;
+            background-color: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
         }
         .result.error {
-            color: red;
-            border: 1px solid red;
-            background-color: #ffe6e6;
+            color: #c62828; /* 濃い赤色 */
+            border: 2px solid #ef5350;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
         }
-
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: linear-gradient(to right, #ffecd2, #fcb69f); /* 背景グラデーション */
+            color: #333;
+        }
     </style>
 </head>
 <body>
     <h2>🍎 英和辞書ツール</h2>
+    <div style="text-align: right; margin-bottom: 20px;">
+        <button onclick="toggleDarkMode()">ダークモード切替</button>
+    </div>
     <input type="text" id="searchBox" placeholder="例: apple">
     <button onclick="searchWord()">検索</button>
     <button onclick="deleteWord()">削除</button>
@@ -56,6 +85,22 @@
                 console.error("エラー:", err);
                 throw error;
             }
+        }
+
+        document.getElementById("searchBox").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") { // Enterキーが押されたか判定
+                searchWord(); // 検索関数を呼び出す
+            }
+        });
+
+        document.getElementById("meaningBox").addEventListener("keypress", function (event) {
+            if (event.key === "Enter") { // Enterキーが押されたか判定
+                saveWord(); // 保存関数を呼び出す
+            }
+        });
+
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
         }
 
         async function searchWord() {
