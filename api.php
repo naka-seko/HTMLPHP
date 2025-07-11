@@ -6,8 +6,10 @@ $english_words = [];
 function load_dictionary($f_name) {
     // ファイルチェック処理
     $dictionary = [];
+    // ファイルが存在しない場合の新規作成対応
     if (!file_exists($f_name)) {
-        throw new Exception("ファイルが見つかりません: $f_name");
+        $file = fopen($f_name, "w"); // 新規ファイル作成
+        fclose($file);
     }
     // １行ごとに読み込んで、配列に格納
     $lines = file($f_name, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);

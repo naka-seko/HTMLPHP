@@ -1,4 +1,5 @@
-grape,グレープ
-grapefruit,グレープフルーツ
+apple,りんご
+orange,みかん
+pineapple,パイナップル
 peach,もも
 kiwi,キウィフルーツ
