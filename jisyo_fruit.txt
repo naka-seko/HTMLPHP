@@ -1,5 +1,3 @@
 apple,りんご
 orange,みかん
-pineapple,パイナップル
-peach,もも
-kiwi,キウィフルーツ
+banana,スイートバナナ
