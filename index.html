@@ -48,6 +48,26 @@
             background: linear-gradient(to right, #ffecd2, #fcb69f); /* 背景グラデーション */
             color: #333;
         }
+        #historyContainer {
+            display: block; /* 確実に表示 */
+        }
+        #historyTitle {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            text-align: left; /* 左寄せ */
+        }
+        .history-item {
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+        .history-item:hover {
+            background-color: #f0f0f0;
+            color: #333;
+            transition: 0.2s ease;
+        }
     </style>
 </head>
 <body>
@@ -62,8 +82,34 @@
     <button onclick="saveWord()">保存</button>
 
     <div class="result" id="output"></div>
+    <div id="historyContainer" style="margin-top: 20px; padding: 10px; background-color: #f7f7f7; border: 1px solid #ddd;">
+        <h4 id="historyTitle" style="margin-bottom: 10px;">検索履歴</h4>
+        <div id="historyItems"></div> <!-- 履歴のアイテムがここに追加される -->
+    </div>
+    <button onclick="clearHistory()">履歴クリア</button>
 
     <script>
+
+        function toggleDarkMode() {
+            const isDarkMode = document.body.classList.toggle("dark-mode");
+            localStorage.setItem("darkMode", isDarkMode ? "enabled" : "disabled");
+            searchBox.focus(); // 検索ボックスに再フォーカス
+        }
+
+        window.onload = function () {
+            if (localStorage.getItem("darkMode") === "enabled") {
+                document.body.classList.add("dark-mode");
+            }
+            displayHistory(); // ページロード時に履歴を表示
+            searchBox.focus(); // 検索ボックスにフォーカス
+        };
+
+        document.getElementById("meaningBox").addEventListener("focus", () => {
+            meaningBox.lang = 'ja';
+        });
+        document.getElementById("meaningBox").addEventListener("blur", () => {
+            meaningBox.lang = 'en';
+        });
 
         async function requestToPHP(action, word, meaning = "") {
             const output = document.getElementById("output");
@@ -83,7 +129,7 @@
             } catch (err) {
                 output.textContent = `エラーが発生しました: ${err.message}`;  // エラー時
                 console.error("エラー:", err);
-                throw error;
+                throw Error;
             }
         }
 
@@ -99,8 +145,33 @@
             }
         });
 
-        function toggleDarkMode() {
-            document.body.classList.toggle("dark-mode");
+        function addToHistory(word) {
+            if (!word) return; // 空の単語は無視
+
+            let history = JSON.parse(localStorage.getItem("history")) || []; // 履歴を取得
+            if (!history.includes(word)) { // 重複を防ぐ
+                history.push(word); // 履歴に追加
+                localStorage.setItem("history", JSON.stringify(history)); // 保存
+            }
+        }
+
+        function displayHistory() {
+            const historyItems = document.getElementById("historyItems");
+            const history = JSON.parse(localStorage.getItem("history")) || [];
+            historyItems.innerHTML = ""; // 履歴アイテムだけをリセット
+
+            history.forEach(word => {
+                const listItem = document.createElement("div");
+                listItem.textContent = word;
+                listItem.className = "history-item";
+                historyItems.appendChild(listItem);
+            });
+        }
+
+        function clearHistory() {
+            localStorage.removeItem("history");
+            displayHistory(); // 履歴を更新
+            searchBox.focus(); // 検索ボックスに再フォーカス
         }
 
         async function searchWord() {
@@ -119,11 +190,12 @@
 
                 if (response.status === "success") {
                     document.getElementById("output").textContent = response.message; // 結果を表示
+                    addToHistory(word); // 履歴に追加
+                    displayHistory(); // 履歴を更新
                     searchBox.focus(); // 検索ボックスに再フォーカス
                 } else {
                     document.getElementById("output").textContent = response.message; // データ無し表示
                     meaningBox.focus(); // 日本語入力欄にフォーカス
-                    meaningBox.lang = 'ja'; // 言語を日本語に設定
                 }
             } catch (err) {
                 output.textContent = `エラーが発生しました: ${err.message}`;  // エラー時
@@ -152,14 +224,6 @@
             const word = searchBox.value.trim(); // トリムして空白を除去
             const meaningBox = document.getElementById("meaningBox"); // 日本語の取得
             const meaning = meaningBox.value.trim(); // トリムして空白を除去
-
-            // IMEの正確な設定
-            meaningBox.addEventListener('focus', () => {
-                meaningBox.lang = 'ja'; // フォーカス時に日本語
-            });
-            meaningBox.addEventListener('blur', () => {
-                meaningBox.lang = 'en'; // フォーカス外れたら英語
-            });
 
             if (!word || !meaning) { // word,meaningが空の場合
                 const output = document.getElementById("output");
