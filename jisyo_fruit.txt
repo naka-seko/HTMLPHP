@@ -1,3 +1,4 @@
-apple,りんご
 orange,みかん
-banana,スイートバナナ
+peach,もも
+grape,ぶどう
+apple,りんご
