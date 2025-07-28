@@ -1,114 +1,48 @@
 <?php
-$filename = 'jisyo_fruit.txt';
-$english_words = [];
+header("Content-Type: application/json");
 
-// ファイル読み込み関数
-function load_dictionary($f_name) {
-    // ファイルチェック処理
-    $dictionary = [];
-    // ファイルが存在しない場合の新規作成対応
-    if (!file_exists($f_name)) {
-        $file = fopen($f_name, "w"); // 新規ファイル作成
-        fclose($file);
-    }
-    // １行ごとに読み込んで、配列に格納
-    $lines = file($f_name, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($lines as $line) {
-        list($key, $value) = explode(',', $line, 2);
-        $dictionary[trim($key)] = trim($value);
-    }
-    // 配列を返す
-    return $dictionary;
+// 入力を受け取る
+$year = isset($_POST['year']) ? (int)$_POST['year'] : null;
+$month = isset($_POST['month']) ? (int)$_POST['month'] : null;
+
+$min_year = 1950;
+$max_year = 2099;
+
+if ($year === null || $month === null || $year < $min_year || $year > $max_year || $month < 1 || $month > 12) {
+    echo json_encode(["error" => "入力が不正です。"]);
+    exit;
 }
 
-// ファイル書き込み関数
-function save_dictionary($f_name, $dictionary) {
-    // ファイルチェック処理
-    if (!file_exists($f_name)) {
-        throw new Exception("ファイルが見つかりません: $f_name");
-    }
+// カレンダー生成
+function generate_calendar($year, $month) {
+    $calendar = [];
+    $first_day = mktime(0, 0, 0, $month, 1, $year);
+    $days_in_month = date('t', $first_day);
+    $first_weekday = date('w', $first_day);
 
-    // 配列からファイル書き出し処理
-    $file = fopen($f_name, "w");
-    if ($file === false) {
-        throw new Exception("ファイルを開くことが出来ませんでした: $f_name");
+    // 初期空白
+    $week = array_fill(0, $first_weekday, "");
+    for ($day = 1; $day <= $days_in_month; $day++) {
+        $week[] = $day;
+        if (count($week) === 7) {
+            $calendar[] = $week;
+            $week = [];
+        }
     }
-
-    foreach ($dictionary as $key => $value) {
-        fwrite($file, "$key,$value" . PHP_EOL);
+    // 残りの日付
+    if (!empty($week)) {
+        $week = array_pad($week, 7, "");
+        $calendar[] = $week;
     }
-
-    fclose($file);
+    return $calendar;
 }
 
-// 送られてきた JSON データの受け取り
-$data = json_decode(file_get_contents("php://input"), true);
-// 初期設定
-$action = $data["action"] ?? "";
-$word = trim($data["word"] ?? "");
-$meaning = trim($data["meaning"] ?? "");
+$calendar = generate_calendar($year, $month);
 
-$english_words = load_dictionary($filename);
-$response = ["message" => "何も処理されませんでした。"];
-
-// 操作ごとの処理
-switch ($action) {
-    // 検索時
-    case "search":
-        if (!is_array($english_words)) {
-            echo json_encode(["status" => "error","message" => "辞書データが正しくありません。"]);
-            return;
-        }
-
-        //　辞書に存在すれば、日本語で回答してJSONに返す。
-        //　存在しなければ、見つからない表示してJSONに返す。
-        if (array_key_exists($word, $english_words)) {
-            $response = [
-                "status" => "success",
-                "message" => "{$word} の意味は「{$english_words[$word]}」です。"
-            ];
-        } else {
-            $response = [
-                "status" => "notfound",
-                "message"=> "お探しの単語 {$word} は見つかりませんでした。😢"
-            ];
-        }
-        break;
-
-    // 保存時
-    case "save":
-        //　辞書に存在すれば、更新保存してJSONに返す。
-        //　存在しなければ、追加保存してJSONに返す。
-        if (array_key_exists($word, $english_words)) {
-            $response["message"] = "{$word} は辞書に存在します。更新保存しました。";
-        } else {
-            $response["message"] = "{$word} は辞書に存在しません。追加保存しました。";
-        }
-
-        $english_words[$word] = $meaning;
-        save_dictionary($filename, $english_words);
-        break;
-
-    // 削除時
-    case "delete":
-        //　辞書に存在すれば、辞書削除してJSONに返す。
-        //　存在しなければ、存在しない表示してJSONに返す。
-        if (array_key_exists($word, $english_words)) {
-            unset($english_words[$word]);
-            save_dictionary($filename, $english_words);
-            $response["message"] = "{$word} を削除しました。";
-        } else {
-            $response["message"] = "{$word} は辞書に存在しません。";
-        }
-        break;
-
-    // 上記以外、不正アクション
-        default:
-        $response["message"] = "不正なアクションです。";
-        break;
-
-}
-// JSON 形式で返す
-header('Content-Type: application/json; charset=utf-8');
-echo json_encode($response);
+// 結果をJSONで返す
+echo json_encode([
+    "year" => $year,
+    "month" => $month,
+    "calendar" => $calendar
+]);
 ?>
