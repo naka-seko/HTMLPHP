@@ -2,12 +2,13 @@
 header("Content-Type: application/json");
 
 // 入力を受け取る
-$year = isset($_POST['year']) ? (int)$_POST['year'] : null;
-$month = isset($_POST['month']) ? (int)$_POST['month'] : null;
-
+$input = json_decode(file_get_contents("php://input"), true);
+$year = $input["year"] ?? null;
+$month = $input["month"] ?? null;
+// 年の範囲
 $min_year = 1950;
 $max_year = 2099;
-
+// 入力の検証
 if ($year === null || $month === null || $year < $min_year || $year > $max_year || $month < 1 || $month > 12) {
     echo json_encode(["error" => "入力が不正です。"]);
     exit;
