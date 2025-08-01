@@ -108,7 +108,7 @@
 <body>
     <h1>カレンダー作成</h1>
 
-    <form action="api.php" method="POST">
+    <form id="calendar-form" action="api.php" method="POST">
         <div class="title">年</div>
         <select id="year" name="year">
         <!-- 年範囲 -->
@@ -133,35 +133,28 @@
         <?php
             // 1月から12月までの範囲を生成
             for ($m = 1; $m <= 12; $m++) {
-                // 月を2桁表示にする
-                $m = str_pad($m, 2, '0', STR_PAD_LEFT);
-                // 現在の月を選択状態にする
-                if ($m == date("m")) {
-                    echo "<option value='$m' selected>$m</option>";
+                $m2 = str_pad($m, 2, '0', STR_PAD_LEFT);
+                if ($m2 == date("m")) {
+                    echo "<option value='$m2' selected>$m2</option>";
+                } else {
+                    echo "<option value='$m2'>$m2</option>";
                 }
-                else
-                    echo "<option value='$m'>$m</option>";
             }
         ?>
         </select>
 
-        <br>
-        <br>
-        <div id="calendar-section">
-            <!-- カレンダー生成フォーム -->
-            <form id="calendar-form">
-                <!-- ボタンのコード -->
-                <button id="generate-calendar">作成します‼</button>
-            </form>
-            <!-- ボタンの下に表示するセクション -->
-            <div id="output-section">
-                <!-- ここに表示したいものを追加 -->
-            </div>
+        <br><br>
+        <button id="generate-calendar" type="button">作成します‼</button>
+        <div id="output-section">
+            <!-- ここに表示したいものを追加 -->
         </div>
-
     </form>
 
-    <script src="calendar.js"></script>
+    <!-- カレンダーの表示セクション -->
+    <div id="calendar-section">
+        <!-- ここにカレンダーを表示 -->
+        <script src="calendar.js"></script>
+    </div>
 
 </body>
 </html>
